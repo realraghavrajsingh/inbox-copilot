@@ -16,6 +16,13 @@ import {
 import { scanInbox, deleteSpecificEmails, blockAndPurge, getUserProfile, SenderData, EMAIL_CATEGORIES } from '../utils/gmail';
 import CyberCore from './CyberCore';
 
+const THEMES = {
+  cyan: { name: 'Cyan Theme', primary: '#00f2fe', secondary: '#00ffaa' },
+  purple: { name: 'Neon Purple', primary: '#9D4EDD', secondary: '#f72585' },
+  green: { name: 'Matrix Green', primary: '#06D6A0', secondary: '#38b000' },
+  red: { name: 'Crimson Red', primary: '#FF6B6B', secondary: '#ff9f1c' }
+};
+
 interface DashboardProps {
   token: string;
   onLogout: () => void;
@@ -33,6 +40,9 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
+
+  const [activeTheme, setActiveTheme] = useState<keyof typeof THEMES>('cyan');
+  const t = THEMES[activeTheme];
 
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [expandedSender, setExpandedSender] = useState<string | null>(null);
@@ -170,7 +180,7 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   return (
     <div className="min-h-screen bg-[#020202] text-white flex flex-col relative overflow-hidden">
       {/* 3D CyberCore Background Component */}
-      <CyberCore />
+      <CyberCore primary={t.primary} secondary={t.secondary} />
 
       {/* Background Decor & Noise Overlay */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay pointer-events-none z-0" />
@@ -179,19 +189,29 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
       {/* Professional Dashboard Header */}
       <header className="h-20 bg-black/40 backdrop-blur-2xl border-b border-white/5 shadow-[0_4px_30px_rgba(0,242,254,0.05)] flex items-center justify-between px-8 z-20 sticky top-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00f2fe] to-[#00ffaa] flex items-center justify-center p-0.5 shadow-[0_0_20px_rgba(0,242,254,0.3)]">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center p-0.5" style={{ background: `linear-gradient(to bottom right, ${t.primary}, ${t.secondary})`, boxShadow: `0 0 20px ${t.primary}4D` }}>
             <div className="w-full h-full bg-black/80 rounded-[10px] flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-[#00f2fe]" />
+              <ShieldCheck className="w-5 h-5" style={{ color: t.primary }}/>
             </div>
           </div>
-          <h1 className="text-2xl font-light text-white tracking-widest uppercase m-0 flex items-center gap-2 drop-shadow-[0_0_10px_rgba(0,242,254,0.5)]">
+          <h1 className="text-2xl font-light text-white tracking-widest uppercase m-0 flex items-center gap-2" style={{ filter: `drop-shadow(0 0 10px ${t.primary}80)` }}>
              <span className="font-bold">Digital</span>Clarity
           </h1>
         </div>
 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl">
-             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#00f2fe] to-[#00ffaa] flex items-center justify-center text-black font-bold shadow-[0_0_15px_rgba(0,242,254,0.4)]">
+             <select 
+               value={activeTheme} 
+               onChange={(e) => setActiveTheme(e.target.value as keyof typeof THEMES)}
+               className="bg-transparent text-xs font-bold text-white/70 outline-none cursor-pointer border-none"
+             >
+               {Object.entries(THEMES).map(([key, val]) => (
+                 <option key={key} value={key} className="bg-black text-white">{val.name}</option>
+               ))}
+             </select>
+             <div className="w-px h-4 bg-white/20 mx-1" />
+             <div className="w-9 h-9 rounded-full flex items-center justify-center text-black font-bold" style={{ background: `linear-gradient(to top right, ${t.primary}, ${t.secondary})`, boxShadow: `0 0 15px ${t.primary}66` }}>
                {profile?.emailAddress ? profile.emailAddress[0].toUpperCase() : 'U'}
              </div>
              <div>
