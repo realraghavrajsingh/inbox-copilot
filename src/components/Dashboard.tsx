@@ -31,6 +31,9 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   const [limit, setLimit] = useState<number>(1000);
   const [category, setCategory] = useState<string>('all');
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [expandedSender, setExpandedSender] = useState<string | null>(null);
   const [totalDeleted, setTotalDeleted] = useState(0);
@@ -51,6 +54,7 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
         setScanStatusMsg(msg);
       });
       setSenders(results);
+      setCurrentPage(1); // Reset to first page after scan
     } catch (err: any) {
       alert(err.message || 'An error occurred while scanning emails.');
     } finally {
@@ -134,17 +138,30 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   };
 
   const toggleSelectAll = () => {
-    if (selectedEmails.size === filteredSenders.length) {
+    if (selectedEmails.size === filteredSenders.length && filteredSenders.length > 0) {
       setSelectedEmails(new Set());
     } else {
       setSelectedEmails(new Set(filteredSenders.map(s => s.email)));
     }
   };
 
+  const handleCategoryChange = (newCat: string) => {
+    setCategory(newCat);
+    setCurrentPage(1); // Reset page on category change
+    setSelectedEmails(new Set()); // Clear selections to avoid confusion
+  }
+
   // Filter Data
   const filteredSenders = category === 'all' 
     ? senders 
     : senders.filter(s => s.category === category);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredSenders.length / ITEMS_PER_PAGE);
+  const paginatedSenders = filteredSenders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE, 
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const totalEmailsScanned = senders.reduce((acc, curr) => acc + curr.count, 0);
   const selectedEmailCount = senders.filter(s => selectedEmails.has(s.email)).reduce((acc, curr) => acc + curr.count, 0);
@@ -298,19 +315,20 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
             {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
                <button 
-                 onClick={() => setCategory('all')}
+                 onClick={() => handleCategoryChange('all')}
                  className={`flex-1 min-w-[100px] py-2 rounded-lg text-sm font-bold transition-all border ${category === 'all' ? 'bg-[#00f2fe] text-black border-[#00f2fe]' : 'bg-white/5 text-white/80 border-white/20 hover:border-[#00f2fe]'}`}
                >
                  All ({senders.length})
                </button>
                {Object.values(EMAIL_CATEGORIES).map(cat => {
                  if (cat.name.includes("Unknown")) return null;
-                 const count = senders.filter(s => s.category === Object.keys(EMAIL_CATEGORIES).find(k=>EMAIL_CATEGORIES[k].name === cat.name)).length;
-                 const isSelected = category === Object.keys(EMAIL_CATEGORIES).find(k=>EMAIL_CATEGORIES[k].name === cat.name);
+                 const key = Object.keys(EMAIL_CATEGORIES).find(k=>EMAIL_CATEGORIES[k].name === cat.name)!;
+                 const count = senders.filter(s => s.category === key).length;
+                 const isSelected = category === key;
                  return (
                    <button 
                      key={cat.name}
-                     onClick={() => setCategory(Object.keys(EMAIL_CATEGORIES).find(k=>EMAIL_CATEGORIES[k].name === cat.name)!)}
+                     onClick={() => handleCategoryChange(key)}
                      className={`flex-1 min-w-[120px] py-2 rounded-lg text-sm font-bold transition-all border flex justify-center items-center gap-2 ${isSelected ? 'bg-[#00f2fe] text-black border-[#00f2fe]' : 'bg-white/5 text-white/80 border-white/20 hover:border-[#00f2fe]'}`}
                    >
                      {cat.icon} {count}
@@ -319,10 +337,33 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
                })}
             </div>
 
+            {/* Pagination Controls - TOP */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
+                 <button 
+                   disabled={currentPage === 1}
+                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                   className="px-4 py-1.5 rounded bg-white/10 hover:bg-[#00f2fe]/20 hover:text-[#00f2fe] disabled:opacity-30 disabled:hover:bg-white/10 disabled:hover:text-white transition-colors text-sm font-bold"
+                 >
+                    &larr; Prev
+                 </button>
+                 <div className="text-sm font-medium text-white/70">
+                    Page <span className="text-white font-bold">{currentPage}</span> of {totalPages}
+                 </div>
+                 <button 
+                   disabled={currentPage === totalPages}
+                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                   className="px-4 py-1.5 rounded bg-white/10 hover:bg-[#00f2fe]/20 hover:text-[#00f2fe] disabled:opacity-30 disabled:hover:bg-white/10 disabled:hover:text-white transition-colors text-sm font-bold"
+                 >
+                    Next &rarr;
+                 </button>
+              </div>
+            )}
+
             {/* Senders Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AnimatePresence>
-                {filteredSenders.map(sender => {
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-max min-h-[500px]">
+              <AnimatePresence mode="popLayout">
+                {paginatedSenders.map(sender => {
                   const isExpanded = expandedSender === sender.email;
                   const isSelected = selectedEmails.has(sender.email);
                   
@@ -390,7 +431,8 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
                         <motion.div 
                           initial={{ height: 0, opacity: 0 }} 
                           animate={{ height: "auto", opacity: 1 }} 
-                          className="border-t border-white/5 bg-black/40 p-4 max-h-[300px] overflow-y-auto styled-scrollbar"
+                          exit={{ height: 0, opacity: 0 }}
+                          className="border-t border-white/5 bg-black/40 p-5 max-h-[350px] overflow-y-auto styled-scrollbar"
                         >
                           <h4 className="text-xs font-bold text-[#00f2fe] uppercase tracking-wider mb-3">Recent Emails from {sender.email}</h4>
                           <div className="space-y-2">
@@ -417,6 +459,35 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
               </AnimatePresence>
             </div>
             
+            {/* Pagination Controls - BOTTOM */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md mt-4">
+                 <button 
+                   disabled={currentPage === 1}
+                   onClick={() => {
+                     setCurrentPage(p => Math.max(1, p - 1));
+                     window.scrollTo({ top: 300, behavior: 'smooth' });
+                   }}
+                   className="px-4 py-1.5 rounded bg-white/10 hover:bg-[#00f2fe]/20 hover:text-[#00f2fe] disabled:opacity-30 disabled:hover:bg-white/10 disabled:hover:text-white transition-colors text-sm font-bold"
+                 >
+                    &larr; Prev Page
+                 </button>
+                 <div className="text-sm font-medium text-white/70">
+                    Page <span className="text-white font-bold">{currentPage}</span> of {totalPages}
+                 </div>
+                 <button 
+                   disabled={currentPage === totalPages}
+                   onClick={() => {
+                     setCurrentPage(p => Math.min(totalPages, p + 1));
+                     window.scrollTo({ top: 300, behavior: 'smooth' });
+                   }}
+                   className="px-4 py-1.5 rounded bg-white/10 hover:bg-[#00f2fe]/20 hover:text-[#00f2fe] disabled:opacity-30 disabled:hover:bg-white/10 disabled:hover:text-white transition-colors text-sm font-bold"
+                 >
+                    Next Page &rarr;
+                 </button>
+              </div>
+            )}
+
             {filteredSenders.length === 0 && (
               <div className="text-center p-12 bg-white/5 rounded-xl border border-white/10 mt-4">
                  <ShieldCheck className="w-12 h-12 text-[#00f2fe] mx-auto mb-4 opacity-50" />
