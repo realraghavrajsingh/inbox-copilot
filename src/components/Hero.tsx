@@ -99,7 +99,10 @@ export default function Hero({ onLogin }: HeroProps) {
           <button onClick={handleConnectGmail} className="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-full font-medium flex items-center justify-center gap-2 hover:scale-105 transition-transform duration-300">
             Connect Gmail <ArrowRight className="w-4 h-4" />
           </button>
-          <button className="w-full sm:w-auto px-8 py-4 bg-white/[0.05] border border-white/[0.1] text-white rounded-full font-medium flex items-center justify-center gap-2 hover:bg-white/[0.1] transition-all duration-300 backdrop-blur-md">
+          <button onClick={() => {
+            const el = document.getElementById('pricing');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }} className="w-full sm:w-auto px-8 py-4 bg-white/[0.05] border border-white/[0.1] text-white rounded-full font-medium flex items-center justify-center gap-2 hover:bg-white/[0.1] transition-all duration-300 backdrop-blur-md">
             View Pricing
           </button>
         </motion.div>
