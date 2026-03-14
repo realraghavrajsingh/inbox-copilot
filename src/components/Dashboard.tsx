@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { scanInbox, deleteSpecificEmails, blockAndPurge, getUserProfile, SenderData, EMAIL_CATEGORIES } from '../utils/gmail';
 import CyberCore from './CyberCore';
+import PricingModal from './PricingModal';
 
 const THEMES = {
   cyan: { name: 'Cyan Theme', primary: '#00f2fe', secondary: '#00ffaa' },
@@ -47,10 +48,27 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   const [expandedSender, setExpandedSender] = useState<string | null>(null);
   const [totalDeleted, setTotalDeleted] = useState(0);
+  const [showPricingModal, setShowPricingModal] = useState(false);
 
   useEffect(() => {
-    getUserProfile(token).then(p => setProfile(p));
+    getUserProfile(token).then(p => {
+       setProfile(p);
+       if (p?.emailAddress) {
+         const stored = localStorage.getItem(`inbox-copilot-deleted-${p.emailAddress}`);
+         if (stored) setTotalDeleted(parseInt(stored, 10));
+       }
+    });
   }, [token]);
+
+  const updateDeletedCount = (count: number) => {
+    setTotalDeleted(prev => {
+      const next = prev + count;
+      if (profile?.emailAddress) {
+        localStorage.setItem(`inbox-copilot-deleted-${profile.emailAddress}`, next.toString());
+      }
+      return next;
+    });
+  };
 
   const handleScan = async (scanLimit: number) => {
     setIsScanning(true);
@@ -73,13 +91,17 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   };
 
   const handleDeleteSender = async (senderEmail: string, emailIds: string[]) => {
+    if (totalDeleted >= 1000) {
+       setShowPricingModal(true);
+       return;
+    }
     if (!confirm(`Are you sure you want to delete ${emailIds.length} emails from ${senderEmail}?`)) return;
     
     setScanStatusMsg(`Deleting ${emailIds.length} emails...`);
     setIsScanning(true);
     try {
       const deleted = await deleteSpecificEmails(token, emailIds);
-      setTotalDeleted(prev => prev + deleted);
+      updateDeletedCount(deleted);
       setSenders(prev => prev.filter(s => s.email !== senderEmail));
       if (expandedSender === senderEmail) setExpandedSender(null);
     } catch(e) {
@@ -91,13 +113,17 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   };
 
   const handleBlockSender = async (senderEmail: string) => {
+    if (totalDeleted >= 1000) {
+       setShowPricingModal(true);
+       return;
+    }
     if (!confirm(`Are you sure you want to BLOCK ${senderEmail} and delete all their existing emails?`)) return;
     
     setScanStatusMsg(`Blocking ${senderEmail}...`);
     setIsScanning(true);
     try {
       const deleted = await blockAndPurge(token, senderEmail);
-      setTotalDeleted(prev => prev + deleted);
+      updateDeletedCount(deleted);
       setSenders(prev => prev.filter(s => s.email !== senderEmail));
       if (expandedSender === senderEmail) setExpandedSender(null);
     } catch(e) {
@@ -109,6 +135,10 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
   };
 
   const handleBulkDelete = async () => {
+    if (totalDeleted >= 1000) {
+       setShowPricingModal(true);
+       return;
+    }
     const list = Array.from(selectedEmails);
     if (list.length === 0) return;
     
@@ -129,7 +159,7 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
       // Depending on API throughput, we could call deleteSpecificEmails for all of them
       deletedCount = await deleteSpecificEmails(token, allIdsToPurge);
       
-      setTotalDeleted(prev => prev + deletedCount);
+      updateDeletedCount(deletedCount);
       setSenders(prev => prev.filter(s => !list.includes(s.email)));
       setSelectedEmails(new Set());
     } catch(e) {
@@ -532,6 +562,13 @@ export default function Dashboard({ token, onLogout }: DashboardProps) {
         )}
 
       </main>
+
+      {showPricingModal && (
+        <PricingModal 
+          onClose={() => setShowPricingModal(false)}
+          deletedCount={totalDeleted}
+        />
+      )}
     </div>
   );
 }
