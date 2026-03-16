@@ -185,10 +185,15 @@ export default function ThreeVisualization() {
   return (
     <section className="py-32 relative h-[800px] overflow-hidden flex items-center">
       <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 14], fov: 35 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}>
+        <Canvas 
+          camera={{ position: [0, 0, 14], fov: 35 }} 
+          gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2, powerPreference: "high-performance" }}
+          dpr={[1, 1.5]}
+          performance={{ min: 0.5 }}
+        >
           <color attach="background" args={['#020202']} />
           <ambientLight intensity={0.2} />
-          <spotLight position={[10, 15, 10]} angle={0.25} penumbra={1} intensity={5} color="#c084fc" castShadow />
+          <spotLight position={[10, 15, 10]} angle={0.25} penumbra={1} intensity={5} color="#c084fc" />
           <pointLight position={[-10, -10, -10]} intensity={3} color="#38bdf8" />
           <pointLight position={[0, 8, -5]} intensity={4} color="#00ffaa" />
           

@@ -1,9 +1,14 @@
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
+import { loginWithGoogle } from "../utils/googleAuth";
 
-export default function FinalCTA() {
+interface FinalCTAProps {
+  onLogin?: (token: string) => void;
+}
+
+export default function FinalCTA({ onLogin }: FinalCTAProps) {
   return (
-    <section className="py-32 relative overflow-hidden">
+    <section className="py-32 relative overflow-hidden" id="final-cta">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-purple-900/20 pointer-events-none" />
       
       <div className="container mx-auto px-6 relative z-10">
@@ -34,7 +39,10 @@ export default function FinalCTA() {
             transition={{ delay: 0.2 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <button className="px-8 py-4 bg-white text-black rounded-full font-medium flex items-center justify-center gap-2 hover:scale-105 transition-transform duration-300">
+            <button 
+              onClick={() => onLogin && loginWithGoogle(onLogin)}
+              className="px-8 py-4 bg-white text-black rounded-full font-medium flex items-center justify-center gap-2 hover:scale-105 transition-transform duration-300"
+            >
               Get Started <ArrowRight className="w-4 h-4" />
             </button>
           </motion.div>

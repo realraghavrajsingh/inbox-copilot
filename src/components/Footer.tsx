@@ -7,9 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
-                <Mail className="w-5 h-5" />
-              </div>
+              <img src="/digitalclarity_logo.png" alt="DigitalClarity Logo" className="w-8 h-8 object-contain" />
               <span className="text-xl font-bold tracking-tight">Inbox Copilot</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">

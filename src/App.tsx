@@ -51,9 +51,8 @@ export default function App() {
       <Testimonials />
       <Pricing />
       <Security />
-      <FinalCTA />
+      <FinalCTA onLogin={(token) => setAccessToken(token)} />
       <Footer />
     </main>
   );
 }
-
