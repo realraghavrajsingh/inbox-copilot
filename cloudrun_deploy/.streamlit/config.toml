@@ -1,0 +1,19 @@
+[browser]
+gatherUsageStats = false
+serverAddress = "0.0.0.0"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+runOnSave = false
+
+[theme]
+primaryColor = "#22d3ee"
+backgroundColor = "#0f172a"
+secondaryBackgroundColor = "#1e293b"
+textColor = "#f1f5f9"
+
+[client]
+toolbarMode = "minimal"
+showSidebarNavigation = false

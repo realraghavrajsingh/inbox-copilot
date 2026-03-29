@@ -1,8 +1,59 @@
+# Sensitive files - DO NOT COMMIT
+credentials.json
+token.json
+token.pickle
+*.pickle
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+
+# Node & Build
 node_modules/
 build/
 dist/
 coverage/
-.DS_Store
-*.log
 .env*
 !.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Logs
+*.log
+
+# Old/backup files
+app-v*.py
+deepseek-app-v*.py
+Email-Deleter-v*.py
+gpt-app.py
+cleaner_agent.py
+google_photos_deleter.py
+photos-deleter-v2.py
+resume-generator.py
+unsubscriber.py
+login.py
+move_asset.py
+App.jsx
+*.png
+
+# Web app (separate project)
+web-app/
+.next/

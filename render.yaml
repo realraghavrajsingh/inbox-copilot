@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: inbox-copilot
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: cloudrun_deploy/Dockerfile
+    dockerContext: cloudrun_deploy
+    envVars:
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: REDIRECT_URI
+        sync: false
